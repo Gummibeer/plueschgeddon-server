@@ -6,6 +6,7 @@
  * windows cmd socket: http://stackoverflow.com/a/20346530/4907524
  * broadcast to multiple users: http://cs.lmu.edu/~ray/notes/javanetexamples
  * thread sync array: http://stackoverflow.com/questions/21917111/chat-server-how-all-threads-to-send-an-incoming-message
+ * database connection: http://www.vogella.com/tutorials/MySQLJava/article.html
  */
 
 package com.plueschgeddon.server;
@@ -25,13 +26,16 @@ public class Main {
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
 
+    public static Mysql mysql = new Mysql();
     public static HashSet<String> connections = new HashSet<>();
+    public static String[] config;
 
     public static void main(String args[]) throws Exception {
         println("Plüschgeddon-Multiplayer-Server", ANSI_CYAN);
         ConfigLoader configLoader = new ConfigLoader();
-        String[] config = configLoader.getAll();
+        config = configLoader.getAll();
         println("loaded Server-Config", ANSI_GREEN);
+        mysql.connect();
 
         println("start Socket-Listener on " + config[0] + ":" + config[1], ANSI_BLUE);
         DatagramSocket serverSocket = new DatagramSocket(Integer.parseInt(config[1]), InetAddress.getByName(config[0]));
@@ -46,7 +50,11 @@ public class Main {
             println("received data from " + IPAddress.toString().replace("/", "") + ":" + port + " -> " + sentence);
             String capitalizedSentence = sentence.toUpperCase();
             sendData = capitalizedSentence.getBytes();
-            connections.add(IPAddress.toString().replace("/", "") + ":" + port);
+
+            if(!connections.contains(IPAddress.toString().replace("/", "") + ":" + port)) {
+                mysql.select();
+                connections.add(IPAddress.toString().replace("/", "") + ":" + port);
+            }
             for(String recipient : connections) {
                 try {
                     String[] datas = recipient.split(":");

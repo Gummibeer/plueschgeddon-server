@@ -1,4 +1,5 @@
 /**
+ * UDp-Server: https://systembash.com/a-simple-java-udp-server-and-udp-client/
  * socket server & client: http://de.wikibooks.org/wiki/Java_Standard:_Socket_ServerSocket_(java.net)_UDP_und_TCP_IP
  * details for java socket: http://openbook.rheinwerk-verlag.de/javainsel9/javainsel_21_006.htm
  * colorized console: http://stackoverflow.com/a/5762502/4907524
@@ -9,13 +10,8 @@
 
 package com.plueschgeddon.server;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.io.*;
 import java.net.*;
-
-import com.plueschgeddon.server.Sockets.Service;
+import java.util.HashSet;
 
 public class Main {
 
@@ -29,56 +25,40 @@ public class Main {
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
 
-    public static void main(String[] args) throws IOException {
-        println("Plueschgeddon-Multiplayer-Server", ANSI_CYAN);
-        println("");
-        println("initialize Server-Config", ANSI_BLUE);
+    public static HashSet<String> connections = new HashSet<>();
+
+    public static void main(String args[]) throws Exception {
+        println("Plüschgeddon-Multiplayer-Server", ANSI_CYAN);
         ConfigLoader configLoader = new ConfigLoader();
         String[] config = configLoader.getAll();
-        println("Server-Config loaded", ANSI_GREEN);
-        println("# IP: " + config[0]);
-        println("# Port: " + config[1]);
-        println("");
+        println("loaded Server-Config", ANSI_GREEN);
 
-        final ExecutorService pool;
-        final ServerSocket serverSocket;
-        int port = Integer.parseInt(config[1]);
-        String var = "C";
-        String zusatz;
-        if (args.length > 0)
-            var = args[0].toUpperCase();
-        if (var.equals("C")) {
-            pool = Executors.newCachedThreadPool();
-            zusatz = "CachedThreadPool";
-        } else {
-            int poolSize = 20;
-            pool = Executors.newFixedThreadPool(poolSize);
-            zusatz = "poolsize=" + poolSize;
-        }
-        serverSocket = new ServerSocket(port, 100, InetAddress.getByName(config[0]));
-        Thread t1 = new Thread(new Service(pool, serverSocket));
-        println("start Socket-Service: " + zusatz, ANSI_BLUE);
-        println("Thread: " + Thread.currentThread());
-        t1.start();
-        Runtime.getRuntime().addShutdownHook(
-                new Thread() {
-                    public void run() {
-                        println("Strg+C, pool.shutdown");
-                        pool.shutdown();
-                        try {
-                            pool.awaitTermination(4L, TimeUnit.SECONDS);
-                            if (!serverSocket.isClosed()) {
-                                println("close Socket-Service", ANSI_RED);
-                                serverSocket.close();
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (InterruptedException ei) {
-                            ei.printStackTrace();
-                        }
-                    }
+        println("start Socket-Listener on " + config[0] + ":" + config[1], ANSI_BLUE);
+        DatagramSocket serverSocket = new DatagramSocket(Integer.parseInt(config[1]), InetAddress.getByName(config[0]));
+        byte[] receiveData = new byte[1024];
+        byte[] sendData = new byte[1024];
+        while (true) {
+            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+            serverSocket.receive(receivePacket);
+            String sentence = new String(receivePacket.getData(), 0, receivePacket.getLength());
+            InetAddress IPAddress = receivePacket.getAddress();
+            int port = receivePacket.getPort();
+            println("received data from " + IPAddress.toString().replace("/", "") + ":" + port + " -> " + sentence);
+            String capitalizedSentence = sentence.toUpperCase();
+            sendData = capitalizedSentence.getBytes();
+            // TODO: save all connections in ArrayList and send data foreach connection
+            connections.add(IPAddress.toString().replace("/", "") + ":" + port);
+            for(String recipient : connections) {
+                try {
+                    String[] datas = recipient.split(":");
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(datas[0]), Integer.parseInt(datas[1]));
+                    serverSocket.send(sendPacket);
+                    println("sent data to " + datas[0].replace("/", "") + ":" + datas[1] + " -> " + capitalizedSentence);
+                } catch(Exception e) {
+                    e.printStackTrace();
                 }
-        );
+            }
+        }
     }
 
     public static void println(String text) {

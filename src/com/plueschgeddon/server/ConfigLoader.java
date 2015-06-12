@@ -12,7 +12,7 @@ import java.util.Properties;
 
 public class ConfigLoader {
 
-    String ip;
+    String host;
     String port;
 
     public String[] getAll() throws IOException {
@@ -27,9 +27,9 @@ public class ConfigLoader {
             throw new FileNotFoundException("property file '" + propFileName + "' not found in the classpath");
         }
 
-        this.ip = prop.getProperty("ip");
-        if(this.ip.equals("")) {
-            this.ip = InetAddress.getLocalHost().getHostAddress();
+        this.host = prop.getProperty("host");
+        if(this.host.equals("") || this.host.equals("localhost")) {
+            this.host = InetAddress.getLocalHost().getHostAddress();
         }
 
         this.port = prop.getProperty("port");
@@ -38,7 +38,7 @@ public class ConfigLoader {
         }
 
         String[] result = new String[2];
-        result[0] = this.ip;
+        result[0] = this.host;
         result[1] = this.port;
 
         return result;

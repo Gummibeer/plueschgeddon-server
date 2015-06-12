@@ -17,7 +17,7 @@ public class ConfigLoader {
 
     public String[] getAll() throws IOException {
         Properties prop = new Properties();
-        String propFileName = "config.properties";
+        String propFileName = "sample.config.properties";
 
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(propFileName);
 

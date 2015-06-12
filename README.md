@@ -1,2 +1,2 @@
-# Plüschgeddon Game Server
+# PlÃ¼schgeddon Game Server
 

@@ -27,16 +27,6 @@ public class Handler implements Runnable {
             sendMessage(message);
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (!client.isClosed()) {
-                Main.println("close Handler", Main.ANSI_RED);
-                try {
-                    client.close();
-                    Service.clients.remove(client);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 
@@ -46,10 +36,14 @@ public class Handler implements Runnable {
     private void sendMessage(String message) {
         for(Socket receiver : Service.clients) {
             try {
-                PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(receiver.getOutputStream()));
-                printWriter.print(message);
-                printWriter.flush();
-                Main.println("sent Message: " + message, Main.ANSI_GREEN);
+                if(!receiver.isClosed()) {
+                    PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(receiver.getOutputStream()));
+                    printWriter.print(message);
+                    printWriter.flush();
+                    Main.println("sent Message: " + message, Main.ANSI_GREEN);
+                } else {
+                    Service.clients.remove(receiver);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }

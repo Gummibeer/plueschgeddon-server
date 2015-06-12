@@ -22,6 +22,7 @@ public class Service implements Runnable {
         try {
             while (true) {
                 Socket cs = serverSocket.accept();
+                Main.println("new Connection", Main.ANSI_GREEN);
                 clients.add(cs);
                 pool.execute(new Handler(serverSocket, cs));
             }

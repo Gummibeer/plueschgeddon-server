@@ -40,8 +40,10 @@ public class Handler implements Runnable {
         }
     }
 
+    // TODO: confirm message receive
+    // TODO: send message to specific clients
+    // TODO: send message to all clients
     private void sendMessage(String message) {
-        System.out.println(Service.clients);
         for(Socket receiver : Service.clients) {
             try {
                 PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(receiver.getOutputStream()));

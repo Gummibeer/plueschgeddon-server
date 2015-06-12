@@ -46,7 +46,6 @@ public class Main {
             println("received data from " + IPAddress.toString().replace("/", "") + ":" + port + " -> " + sentence);
             String capitalizedSentence = sentence.toUpperCase();
             sendData = capitalizedSentence.getBytes();
-            // TODO: save all connections in ArrayList and send data foreach connection
             connections.add(IPAddress.toString().replace("/", "") + ":" + port);
             for(String recipient : connections) {
                 try {

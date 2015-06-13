@@ -7,6 +7,7 @@
  * broadcast to multiple users: http://cs.lmu.edu/~ray/notes/javanetexamples
  * thread sync array: http://stackoverflow.com/questions/21917111/chat-server-how-all-threads-to-send-an-incoming-message
  * database connection: http://www.vogella.com/tutorials/MySQLJava/article.html
+ * QuickDB: https://code.google.com/p/quickdb/
  */
 
 package com.plueschgeddon.server;
@@ -26,43 +27,70 @@ public class Main {
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
 
-    public static Mysql mysql = new Mysql();
     public static HashSet<String> connections = new HashSet<>();
     public static String[] config;
 
     public static void main(String args[]) throws Exception {
         println("Plüschgeddon-Multiplayer-Server", ANSI_CYAN);
+        println("load Server-Config", ANSI_BLUE);
         ConfigLoader configLoader = new ConfigLoader();
         config = configLoader.getAll();
-        println("loaded Server-Config", ANSI_GREEN);
-        mysql.connect();
+        println("Server-Config loaded", ANSI_GREEN);
 
         println("start Socket-Listener on " + config[0] + ":" + config[1], ANSI_BLUE);
         DatagramSocket serverSocket = new DatagramSocket(Integer.parseInt(config[1]), InetAddress.getByName(config[0]));
-        byte[] receiveData = new byte[1024];
-        byte[] sendData = new byte[1024];
+        println("Socket-Listener started", ANSI_GREEN);
+
         while (true) {
+            byte[] receiveData = new byte[1024];
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
             serverSocket.receive(receivePacket);
             String sentence = new String(receivePacket.getData(), 0, receivePacket.getLength());
             InetAddress IPAddress = receivePacket.getAddress();
             int port = receivePacket.getPort();
+            String connection = IPAddress.toString().replace("/", "") + ":" + port;
+
             println("received data from " + IPAddress.toString().replace("/", "") + ":" + port + " -> " + sentence);
             String capitalizedSentence = sentence.toUpperCase();
-            sendData = capitalizedSentence.getBytes();
+            String returnData;
+            String broadcastData = "";
+            byte[] bytes;
 
-            if(!connections.contains(IPAddress.toString().replace("/", "") + ":" + port)) {
-                mysql.select();
-                connections.add(IPAddress.toString().replace("/", "") + ":" + port);
+            if (capitalizedSentence.startsWith("ENTER")) {
+                // TODO: auth user
+                connections.add(connection);
+                returnData = "true";
+            } else if (capitalizedSentence.equals("EXIT")) {
+                connections.remove(connection);
+                returnData = "true";
+            } else {
+                if (connections.contains(connection)) {
+                    broadcastData = capitalizedSentence;
+                    returnData = "true";
+                } else {
+                    returnData = "false";
+                }
             }
-            for(String recipient : connections) {
-                try {
-                    String[] datas = recipient.split(":");
-                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(datas[0]), Integer.parseInt(datas[1]));
-                    serverSocket.send(sendPacket);
-                    println("sent data to " + datas[0].replace("/", "") + ":" + datas[1] + " -> " + capitalizedSentence);
-                } catch(Exception e) {
-                    e.printStackTrace();
+            // TODO: the other ingame commands
+
+            if (!returnData.equals("")) {
+                bytes = returnData.getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, IPAddress, port);
+                serverSocket.send(sendPacket);
+                println("sent data to " + connection + " -> " + returnData);
+            }
+
+            if (!broadcastData.equals("") && connections.contains(connection)) {
+                for (String recipient : connections) {
+                    bytes = broadcastData.getBytes();
+                    try {
+                        String[] datas = recipient.split(":");
+                        DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName(datas[0]), Integer.parseInt(datas[1]));
+                        serverSocket.send(sendPacket);
+                        println("sent data to " + datas[0].replace("/", "") + ":" + datas[1] + " -> " + broadcastData);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }

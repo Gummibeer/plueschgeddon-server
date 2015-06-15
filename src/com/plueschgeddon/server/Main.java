@@ -27,6 +27,7 @@ public class Main {
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
 
+    private static DatagramSocket serverSocket;
     public static HashSet<String> connections = new HashSet<>();
     public static String[] config;
 
@@ -38,7 +39,7 @@ public class Main {
         println("Server-Config loaded", ANSI_GREEN);
 
         println("start Socket-Listener on " + config[0] + ":" + config[1], ANSI_BLUE);
-        DatagramSocket serverSocket = new DatagramSocket(Integer.parseInt(config[1]), InetAddress.getByName(config[0]));
+        serverSocket = new DatagramSocket(Integer.parseInt(config[1]), InetAddress.getByName(config[0]));
         println("Socket-Listener started", ANSI_GREEN);
 
         while (true) {
@@ -52,33 +53,9 @@ public class Main {
 
             println("received data from " + IPAddress.toString().replace("/", "") + ":" + port + " -> " + sentence);
             String capitalizedSentence = sentence.toUpperCase();
-            String returnData;
             String broadcastData = "";
             byte[] bytes;
-
-            if (capitalizedSentence.startsWith("ENTER")) {
-                // TODO: auth user
-                connections.add(connection);
-                returnData = "true";
-            } else if (capitalizedSentence.equals("EXIT")) {
-                connections.remove(connection);
-                returnData = "true";
-            } else {
-                if (connections.contains(connection)) {
-                    broadcastData = capitalizedSentence;
-                    returnData = "true";
-                } else {
-                    returnData = "false";
-                }
-            }
-            // TODO: the other ingame commands
-
-            if (!returnData.equals("")) {
-                bytes = returnData.getBytes();
-                DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, IPAddress, port);
-                serverSocket.send(sendPacket);
-                println("sent data to " + connection + " -> " + returnData);
-            }
+            broadcastData = handleCommand(capitalizedSentence, connection);
 
             if (!broadcastData.equals("") && connections.contains(connection)) {
                 for (String recipient : connections) {
@@ -92,6 +69,41 @@ public class Main {
                         e.printStackTrace();
                     }
                 }
+            }
+        }
+    }
+
+    private static String handleCommand(String command, String connection) {
+        if (command.startsWith("ENTER")) {
+            // TODO: auth user
+            connections.add(connection);
+            answerRequest("true", connection);
+            return "";
+        } else if (command.equals("EXIT")) {
+            connections.remove(connection);
+            answerRequest("true", connection);
+            return "";
+        } else {
+            if (connections.contains(connection)) {
+                return command;
+            } else {
+                return "";
+            }
+        }
+        // TODO: the other ingame commands
+    }
+
+    private static void answerRequest(String returnData, String recipient) {
+        byte[] bytes;
+        if (!returnData.equals("")) {
+            try {
+                String[] datas = recipient.split(":");
+                bytes = returnData.getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName(datas[0]), Integer.parseInt(datas[1]));
+                serverSocket.send(sendPacket);
+                println("sent data to " + recipient + " -> " + returnData);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }

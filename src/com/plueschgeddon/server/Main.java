@@ -10,6 +10,9 @@
  * QuickDB: https://code.google.com/p/quickdb/
  */
 
+// TODO: use TCP for sensible and response data
+// TODO: use UDP for simple update commands
+
 package com.plueschgeddon.server;
 
 import java.net.*;
@@ -31,7 +34,7 @@ public class Main {
     public static HashSet<String> connections = new HashSet<>();
     public static String[] config;
 
-    public static void main(String args[]) throws Exception {
+    public static void old_main(String args[]) throws Exception {
         println("Plüschgeddon-Multiplayer-Server", ANSI_CYAN);
         println("load Server-Config", ANSI_BLUE);
         ConfigLoader configLoader = new ConfigLoader();

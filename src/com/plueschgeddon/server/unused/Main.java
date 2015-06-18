@@ -13,7 +13,7 @@
 // TODO: use TCP for sensible and response data
 // TODO: use UDP for simple update commands
 
-package com.plueschgeddon.server;
+package com.plueschgeddon.server.unused;
 
 import java.net.*;
 import java.util.HashSet;
@@ -34,47 +34,47 @@ public class Main {
     public static HashSet<String> connections = new HashSet<>();
     public static String[] config;
 
-    public static void old_main(String args[]) throws Exception {
-        println("Plüschgeddon-Multiplayer-Server", ANSI_CYAN);
-        println("load Server-Config", ANSI_BLUE);
-        ConfigLoader configLoader = new ConfigLoader();
-        config = configLoader.getAll();
-        println("Server-Config loaded", ANSI_GREEN);
-
-        println("start Socket-Listener on " + config[0] + ":" + config[1], ANSI_BLUE);
-        serverSocket = new DatagramSocket(Integer.parseInt(config[1]), InetAddress.getByName(config[0]));
-        println("Socket-Listener started", ANSI_GREEN);
-
-        while (true) {
-            byte[] receiveData = new byte[1024];
-            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-            serverSocket.receive(receivePacket);
-            String sentence = new String(receivePacket.getData(), 0, receivePacket.getLength());
-            InetAddress IPAddress = receivePacket.getAddress();
-            int port = receivePacket.getPort();
-            String connection = IPAddress.toString().replace("/", "") + ":" + port;
-
-            println("received data from " + IPAddress.toString().replace("/", "") + ":" + port + " -> " + sentence);
-            String capitalizedSentence = sentence.toUpperCase();
-            String broadcastData = "";
-            byte[] bytes;
-            broadcastData = handleCommand(capitalizedSentence, connection);
-
-            if (!broadcastData.equals("") && connections.contains(connection)) {
-                for (String recipient : connections) {
-                    bytes = broadcastData.getBytes();
-                    try {
-                        String[] datas = recipient.split(":");
-                        DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName(datas[0]), Integer.parseInt(datas[1]));
-                        serverSocket.send(sendPacket);
-                        println("sent data to " + datas[0].replace("/", "") + ":" + datas[1] + " -> " + broadcastData);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-    }
+//    public static void old_main(String args[]) throws Exception {
+//        println("Plüschgeddon-Multiplayer-Server", ANSI_CYAN);
+//        println("load Server-Config", ANSI_BLUE);
+//        ConfigLoader configLoader = new ConfigLoader();
+//        config = configLoader.getAll();
+//        println("Server-Config loaded", ANSI_GREEN);
+//
+//        println("start Socket-Listener on " + config[0] + ":" + config[1], ANSI_BLUE);
+//        serverSocket = new DatagramSocket(Integer.parseInt(config[1]), InetAddress.getByName(config[0]));
+//        println("Socket-Listener started", ANSI_GREEN);
+//
+//        while (true) {
+//            byte[] receiveData = new byte[1024];
+//            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+//            serverSocket.receive(receivePacket);
+//            String sentence = new String(receivePacket.getData(), 0, receivePacket.getLength());
+//            InetAddress IPAddress = receivePacket.getAddress();
+//            int port = receivePacket.getPort();
+//            String connection = IPAddress.toString().replace("/", "") + ":" + port;
+//
+//            println("received data from " + IPAddress.toString().replace("/", "") + ":" + port + " -> " + sentence);
+//            String capitalizedSentence = sentence.toUpperCase();
+//            String broadcastData = "";
+//            byte[] bytes;
+//            broadcastData = handleCommand(capitalizedSentence, connection);
+//
+//            if (!broadcastData.equals("") && connections.contains(connection)) {
+//                for (String recipient : connections) {
+//                    bytes = broadcastData.getBytes();
+//                    try {
+//                        String[] datas = recipient.split(":");
+//                        DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName(datas[0]), Integer.parseInt(datas[1]));
+//                        serverSocket.send(sendPacket);
+//                        println("sent data to " + datas[0].replace("/", "") + ":" + datas[1] + " -> " + broadcastData);
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     private static String handleCommand(String command, String connection) {
         if (command.startsWith("ENTER")) {

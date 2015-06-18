@@ -1,6 +1,7 @@
-package com.plueschgeddon.server;
+package com.plueschgeddon.server.unused;
 
 import cat.quickdb.db.AdminBase;
+import com.plueschgeddon.server.unused.Main;
 
 public class MysqlThread extends Thread {
 

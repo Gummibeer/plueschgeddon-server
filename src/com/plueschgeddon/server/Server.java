@@ -16,6 +16,7 @@ public class Server {
 
             Thread udpThread = new Thread(UDPSocket.getInstance());
             udpThread.start();
+
             Helper.println("test 1 2 3");
         } catch (Exception e) {
             e.printStackTrace();
@@ -23,7 +24,7 @@ public class Server {
     }
 
     private static void setConfig() throws Exception {
-        Helper.println("load Server-Config", Helper.ANSI_BLUE);
+        Helper.println("load Server-Config ...", Helper.ANSI_BLUE);
         ConfigLoader configLoader = ConfigLoader.getInstance();
         config = configLoader.getAll();
         Helper.println("Server-Config loaded", Helper.ANSI_GREEN);

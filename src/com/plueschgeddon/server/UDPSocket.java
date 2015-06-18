@@ -21,13 +21,13 @@ public class UDPSocket implements Runnable {
     }
 
     public void run() {
-        Helper.println("start UDP-Socket-Listener on " + Server.host, Helper.ANSI_BLUE);
+        Helper.println("create UDP-Socket-Listener on " + Server.host + " ...", Helper.ANSI_BLUE);
         try {
             serverSocket = new DatagramSocket(Integer.parseInt(Server.config.get("port")), InetAddress.getByName(Server.config.get("host")));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Helper.println("UDP-Socket-Listener started", Helper.ANSI_GREEN);
+        Helper.println("UDP-Socket-Listener ready", Helper.ANSI_GREEN);
 
         while (true) {
             byte[] receiveData = new byte[1024];
